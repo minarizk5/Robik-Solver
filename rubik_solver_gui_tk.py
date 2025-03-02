@@ -24,9 +24,10 @@ class CubeSquare(tk.Canvas):
         self.create_rectangle(2, 2, self.size-2, self.size-2, fill=self.current_color, outline="black")
 
     def change_color(self, event):
-        current_index = list(self.colors.values()).index(self.current_color)
-        next_index = (current_index + 1) % len(self.colors)
-        self.current_color = list(self.colors.values())[next_index]
+        current_letter = self.get_color_letter()
+        current_index = self.color_list.index(current_letter)
+        next_index = (current_index + 1) % len(self.color_list)
+        self.current_color = self.colors[self.color_list[next_index]]
         self.draw_square()
 
     def get_color_letter(self):
@@ -100,6 +101,18 @@ class RubiksCubeGUI:
     def solve_cube(self):
         try:
             cube_state = self.get_cube_state()
+            
+            # Import validation function from Robik Solver module
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("robik_solver", "Robik Solver.py")
+            robik_solver = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(robik_solver)
+            
+            # Validate the cube state first
+            if not robik_solver.validate_cube_state(cube_state):
+                messagebox.showerror("Error", "Invalid cube state! Please ensure:\n- Each color appears exactly 9 times\n- Colors are properly distributed")
+                return
+                
             solution = kociemba.solve(cube_state)
             formatted_solution = ' → '.join(solution.split())
             self.solution_var.set(formatted_solution)
